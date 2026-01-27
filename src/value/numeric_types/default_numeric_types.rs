@@ -1,5 +1,7 @@
 use std::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
 
+use ordered_float::OrderedFloat;
+
 use crate::{EvalexprError, EvalexprResult, Value};
 
 use super::{EvalexprFloat, EvalexprInt, EvalexprNumericTypes};
@@ -16,14 +18,14 @@ pub struct DefaultNumericTypes;
 
 impl EvalexprNumericTypes for DefaultNumericTypes {
     type Int = i64;
-    type Float = f64;
+    type Float = OrderedFloat<f64>;
 
     fn int_as_float(int: &Self::Int) -> Self::Float {
-        *int as Self::Float
+        OrderedFloat(*int as f64)
     }
 
     fn float_as_int(float: &Self::Float) -> Self::Int {
-        *float as Self::Int
+        float.0 as Self::Int
     }
 }
 
@@ -158,145 +160,147 @@ impl<NumericTypes: EvalexprNumericTypes<Int = Self>> EvalexprInt<NumericTypes> f
     }
 }
 
-impl<NumericTypes: EvalexprNumericTypes<Float = Self>> EvalexprFloat<NumericTypes> for f64 {
-    const MIN: Self = Self::NEG_INFINITY;
-    const MAX: Self = Self::INFINITY;
+impl<NumericTypes: EvalexprNumericTypes<Float = Self>> EvalexprFloat<NumericTypes>
+    for OrderedFloat<f64>
+{
+    const MIN: Self = OrderedFloat(f64::NEG_INFINITY);
+    const MAX: Self = OrderedFloat(f64::INFINITY);
 
-    fn pow(&self, exponent: &Self) -> Self {
-        (*self).powf(*exponent)
+    fn pow(&self, exponent: Self) -> Self {
+        OrderedFloat(self.0.powf(exponent.0))
     }
 
     fn ln(&self) -> Self {
-        (*self).ln()
+        OrderedFloat(self.0.ln())
     }
 
-    fn log(&self, base: &Self) -> Self {
-        (*self).log(*base)
+    fn log(&self, base: Self) -> Self {
+        OrderedFloat(self.0.log(base.0))
     }
 
     fn log2(&self) -> Self {
-        (*self).log2()
+        OrderedFloat(self.0.log2())
     }
 
     fn log10(&self) -> Self {
-        (*self).log10()
+        OrderedFloat(self.0.log10())
     }
 
     fn exp(&self) -> Self {
-        (*self).exp()
+        OrderedFloat(self.0.exp())
     }
 
     fn exp2(&self) -> Self {
-        (*self).exp2()
+        OrderedFloat(self.0.exp2())
     }
 
     fn cos(&self) -> Self {
-        (*self).cos()
+        OrderedFloat(self.0.cos())
     }
 
     fn cosh(&self) -> Self {
-        (*self).cosh()
+        OrderedFloat(self.0.cosh())
     }
 
     fn acos(&self) -> Self {
-        (*self).acos()
+        OrderedFloat(self.0.acos())
     }
 
     fn acosh(&self) -> Self {
-        (*self).acosh()
+        OrderedFloat(self.0.acosh())
     }
 
     fn sin(&self) -> Self {
-        (*self).sin()
+        OrderedFloat(self.0.sin())
     }
 
     fn sinh(&self) -> Self {
-        (*self).sinh()
+        OrderedFloat(self.0.sinh())
     }
 
     fn asin(&self) -> Self {
-        (*self).asin()
+        OrderedFloat(self.0.asin())
     }
 
     fn asinh(&self) -> Self {
-        (*self).asinh()
+        OrderedFloat(self.0.asinh())
     }
 
     fn tan(&self) -> Self {
-        (*self).tan()
+        OrderedFloat(self.0.tan())
     }
 
     fn tanh(&self) -> Self {
-        (*self).tanh()
+        OrderedFloat(self.0.tanh())
     }
 
     fn atan(&self) -> Self {
-        (*self).atan()
+        OrderedFloat(self.0.atan())
     }
 
     fn atanh(&self) -> Self {
-        (*self).atanh()
+        OrderedFloat(self.0.atanh())
     }
 
-    fn atan2(&self, x: &Self) -> Self {
-        (*self).atan2(*x)
+    fn atan2(&self, x: Self) -> Self {
+        OrderedFloat(self.0.atan2(x.0))
     }
 
     fn sqrt(&self) -> Self {
-        (*self).sqrt()
+        OrderedFloat(self.0.sqrt())
     }
 
     fn cbrt(&self) -> Self {
-        (*self).cbrt()
+        OrderedFloat(self.0.cbrt())
     }
 
-    fn hypot(&self, other: &Self) -> Self {
-        (*self).hypot(*other)
+    fn hypot(&self, other: Self) -> Self {
+        OrderedFloat(self.0.hypot(other.0))
     }
 
     fn floor(&self) -> Self {
-        (*self).floor()
+        OrderedFloat(self.0.floor())
     }
 
     fn round(&self) -> Self {
-        (*self).round()
+        OrderedFloat(self.0.round())
     }
 
     fn ceil(&self) -> Self {
-        (*self).ceil()
+        OrderedFloat(self.0.ceil())
     }
 
     fn is_nan(&self) -> bool {
-        (*self).is_nan()
+        self.0.is_nan()
     }
 
     fn is_finite(&self) -> bool {
-        (*self).is_finite()
+        self.0.is_finite()
     }
 
     fn is_infinite(&self) -> bool {
-        (*self).is_infinite()
+        self.0.is_infinite()
     }
 
     fn is_normal(&self) -> bool {
-        (*self).is_normal()
+        self.0.is_normal()
     }
 
     fn abs(&self) -> Self {
-        (*self).abs()
+        OrderedFloat(self.0.abs())
     }
 
-    fn min(&self, other: &Self) -> Self {
-        (*self).min(*other)
+    fn min(self, other: Self) -> Self {
+        OrderedFloat(self.0.min(other.0))
     }
 
-    fn max(&self, other: &Self) -> Self {
-        (*self).max(*other)
+    fn max(self, other: Self) -> Self {
+        OrderedFloat(self.0.max(other.0))
     }
 
     fn random() -> EvalexprResult<Self, NumericTypes> {
         #[cfg(feature = "rand")]
-        let result = Ok(rand::random());
+        let result = Ok(OrderedFloat(rand::random()));
 
         #[cfg(not(feature = "rand"))]
         let result = Err(EvalexprError::RandNotEnabled);

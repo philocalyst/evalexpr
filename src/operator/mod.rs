@@ -16,7 +16,7 @@ use crate::{
 mod display;
 
 /// An enum that represents operators in the operator tree.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Clone)]
 pub enum Operator<NumericTypes: EvalexprNumericTypes = DefaultNumericTypes> {
     /// A root node in the operator tree.
     /// The whole expression is stored under a root node, as well as each subexpression surrounded by parentheses.
@@ -296,7 +296,7 @@ impl<NumericTypes: EvalexprNumericTypes> Operator<NumericTypes> {
                 arguments[1].as_number()?;
 
                 Ok(Value::Float(
-                    arguments[0].as_number()?.pow(&arguments[1].as_number()?),
+                    arguments[0].as_number()?.pow(arguments[1].as_number()?),
                 ))
             },
             Eq => {

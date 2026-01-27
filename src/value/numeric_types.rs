@@ -1,5 +1,6 @@
 use std::{
     fmt::{Debug, Display},
+    hash::Hash,
     ops::{Add, Div, Mul, Neg, Rem, Sub},
     str::FromStr,
 };
@@ -13,7 +14,9 @@ pub mod num_traits_numeric_types;*/
 /// A trait to parameterise `evalexpr` with an int type and a float type.
 ///
 /// See [`EvalexprInt`] and [`EvalexprFloat`] for the requirements on the types.
-pub trait EvalexprNumericTypes: 'static + Sized + Debug + Clone + PartialEq {
+pub trait EvalexprNumericTypes:
+    'static + Sized + Debug + Clone + Eq + Hash + Ord + PartialOrd
+{
     /// The integer type.
     #[cfg(feature = "serde")]
     type Int: EvalexprInt<Self> + serde::Serialize + for<'de> serde::Deserialize<'de>;
@@ -39,13 +42,14 @@ pub trait EvalexprNumericTypes: 'static + Sized + Debug + Clone + PartialEq {
 
 /// An integer type that can be used by `evalexpr`.
 pub trait EvalexprInt<NumericTypes: EvalexprNumericTypes<Int = Self>>:
-    Clone + Debug + Display + FromStr + Eq + Ord
+    Clone + Debug + Display + FromStr + Eq + Ord + Hash
 {
     /// The minimum value of the integer type.
     const MIN: Self;
 
     /// The maximum value of the integer type.
     const MAX: Self;
+// ... (rest of the file)
 
     /// Convert a value of type [`usize`] into `Self`.
     fn from_usize(int: usize) -> EvalexprResult<Self, NumericTypes>;
@@ -112,6 +116,9 @@ pub trait EvalexprFloat<NumericTypes: EvalexprNumericTypes<Float = Self>>:
     + Debug
     + Display
     + FromStr
+    + Eq
+    + Hash
+    + Ord
     + PartialEq
     + PartialOrd
     + Add<Output = Self>
@@ -132,13 +139,13 @@ pub trait EvalexprFloat<NumericTypes: EvalexprNumericTypes<Float = Self>>:
     const MAX: Self;
 
     /// Perform a power operation.
-    fn pow(&self, exponent: &Self) -> Self;
+    fn pow(&self, exponent: Self) -> Self;
 
     /// Compute the natural logarithm.
     fn ln(&self) -> Self;
 
     /// Compute the logarithm to a certain base.
-    fn log(&self, base: &Self) -> Self;
+    fn log(&self, base: Self) -> Self;
 
     /// Compute the logarithm base 2.
     fn log2(&self) -> Self;
@@ -189,7 +196,7 @@ pub trait EvalexprFloat<NumericTypes: EvalexprNumericTypes<Float = Self>>:
     fn atanh(&self) -> Self;
 
     /// Compute the four quadrant arctangent.
-    fn atan2(&self, x: &Self) -> Self;
+    fn atan2(&self, x: Self) -> Self;
 
     /// Compute the square root.
     fn sqrt(&self) -> Self;
@@ -198,7 +205,7 @@ pub trait EvalexprFloat<NumericTypes: EvalexprNumericTypes<Float = Self>>:
     fn cbrt(&self) -> Self;
 
     /// Compute the distance between the origin and a point (`self`, `other`) on the Euclidean plane.
-    fn hypot(&self, other: &Self) -> Self;
+    fn hypot(&self, other: Self) -> Self;
 
     /// Compute the largest integer less than or equal to `self`.
     fn floor(&self) -> Self;
@@ -225,10 +232,10 @@ pub trait EvalexprFloat<NumericTypes: EvalexprNumericTypes<Float = Self>>:
     fn abs(&self) -> Self;
 
     /// Returns the minimum of the two numbers, ignoring NaN.
-    fn min(&self, other: &Self) -> Self;
+    fn min(self, other: Self) -> Self;
 
     /// Returns the maximum of the two numbers, ignoring NaN.
-    fn max(&self, other: &Self) -> Self;
+    fn max(self, other: Self) -> Self;
 
     /// Generate a random float value between 0.0 and 1.0.
     ///

@@ -226,7 +226,7 @@
 //! use evalexpr::*;
 //!
 //! assert_eq!(eval_int("a = 2; a *= 2; a += 2; a"), Ok(6));
-//! assert_eq!(eval_float("a = 2.2; a /= 2.0 / 4 + 1; a"), Ok(2.2 / (2.0 / 4.0 + 1.0)));
+//! assert_eq!(eval_float("a = 2.2; a /= 2.0 / 4 + 1; a"), Ok((2.2 / (2.0 / 4.0 + 1.0)).into()));
 //! assert_eq!(eval_string("a = \"abc\"; a += \"def\"; a"), Ok("abcdef".to_string()));
 //! assert_eq!(eval_boolean("a = true; a &&= false; a"), Ok(false));
 //! ```
@@ -441,7 +441,7 @@
 //! | Code | Result |
 //! |------|--------|
 //! | `Value::from_int(4)` | `Value::Int(4)` |
-//! | `Value::from_float(4.4)` | `Value::Float(4.4)` |
+//! | `Value::from_float(4.4)` | `Value::Float(4.4.into())` |
 //! | `Value::from(true)` | `Value::Boolean(true)` |
 //! | `Value::from(vec![Value::from_int(3)])` | `Value::Tuple(vec![Value::Int(3)])` |
 //!
@@ -450,7 +450,7 @@
 //! | Code | Result |
 //! |------|--------|
 //! | `Value::from_int(4).as_int()` | `Ok(4)` |
-//! | `Value::from_float(4.4).as_float()` | `Ok(4.4)` |
+//! | `Value::from_float(4.4).as_float()` | `Ok(4.4.into())` |
 //! | `Value::from(true).as_int()` | `Err(Error::ExpectedInt {actual: Value::Boolean(true)})` |
 //!
 //! Values have a precedence of 200.

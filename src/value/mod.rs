@@ -18,7 +18,7 @@ pub const EMPTY_VALUE: () = ();
 
 /// The value type used by the parser.
 /// Values can be of different subtypes that are the variants of this enum.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Value<NumericTypes: EvalexprNumericTypes = DefaultNumericTypes> {
     /// A string value.
@@ -178,8 +178,8 @@ impl<NumericTypes: EvalexprNumericTypes> Value<NumericTypes> {
     }
 
     /// Create a new `Value` from its corresponding raw float type.
-    pub fn from_float(float: NumericTypes::Float) -> Self {
-        Self::Float(float)
+    pub fn from_float<F: Into<NumericTypes::Float>>(float: F) -> Self {
+        Self::Float(float.into())
     }
 
     /// Create a new `Value` from its corresponding raw int type.
@@ -276,6 +276,8 @@ impl<NumericTypes: EvalexprNumericTypes> TryFrom<Value<NumericTypes>> for () {
 
 #[cfg(test)]
 mod tests {
+    use ordered_float::OrderedFloat;
+
     use crate::value::{
         numeric_types::default_numeric_types::DefaultNumericTypes, TupleType, Value,
     };
@@ -289,7 +291,7 @@ mod tests {
         assert_eq!(Value::<DefaultNumericTypes>::from_int(3).as_int(), Ok(3));
         assert_eq!(
             Value::<DefaultNumericTypes>::from_float(3.3).as_float(),
-            Ok(3.3)
+            Ok(OrderedFloat(3.3))
         );
         assert_eq!(
             Value::<DefaultNumericTypes>::from(true).as_boolean(),

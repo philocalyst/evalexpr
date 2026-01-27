@@ -17,7 +17,7 @@ macro_rules! simple_math {
         Some(Function::new(|argument: &Value<NumericTypes>| {
             let tuple = argument.as_fixed_len_tuple(2)?;
             let (a, b) = (tuple[0].as_number()?, tuple[1].as_number()?);
-            Ok(Value::Float(a.$func(&b)))
+            Ok(Value::Float(a.$func(b)))
         }))
     };
 }
@@ -121,7 +121,7 @@ pub fn builtin_function<NumericTypes: EvalexprNumericTypes>(
 
             for argument in arguments {
                 if let Value::Float(float) = argument {
-                    min_float = min_float.min(&float);
+                    min_float = EvalexprFloat::min(min_float, float);
                 } else if let Value::Int(int) = argument {
                     min_int = min_int.min(int);
                 } else {
@@ -143,7 +143,7 @@ pub fn builtin_function<NumericTypes: EvalexprNumericTypes>(
 
             for argument in arguments {
                 if let Value::Float(float) = argument {
-                    max_float = max_float.max(&float);
+                    max_float = EvalexprFloat::max(max_float, float);
                 } else if let Value::Int(int) = argument {
                     max_int = max_int.max(int);
                 } else {

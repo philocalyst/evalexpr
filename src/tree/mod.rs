@@ -37,7 +37,7 @@ mod iter;
 /// assert_eq!(node.eval_with_context(&context), Ok(Value::from_int(3)));
 /// ```
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Clone)]
 pub struct Node<NumericTypes: EvalexprNumericTypes = DefaultNumericTypes> {
     operator: Operator<NumericTypes>,
     children: Vec<Node<NumericTypes>>,

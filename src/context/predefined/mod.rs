@@ -48,7 +48,7 @@ mod tests {
 
             assert_eq!(
                 context.get_value("PI"),
-                Some(&Value::Float(core::f64::consts::PI))
+                Some(&Value::Float(ordered_float::OrderedFloat(core::f64::consts::PI)))
             );
         }
     }
