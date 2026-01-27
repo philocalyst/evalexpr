@@ -1,12 +1,13 @@
 #![cfg(not(tarpaulin_include))]
 
+use ordered_float::OrderedFloat;
 use evalexpr::{error::*, *};
 use std::convert::TryFrom;
 
 #[test]
 fn test_unary_examples() {
     assert_eq!(eval("3"), Ok(Value::Int(3)));
-    assert_eq!(eval("3.3"), Ok(Value::Float(3.3)));
+    assert_eq!(eval("3.3"), Ok(Value::from_float(3.3)));
     assert_eq!(eval("true"), Ok(Value::Boolean(true)));
     assert_eq!(eval("false"), Ok(Value::Boolean(false)));
     assert_eq!(
@@ -16,13 +17,13 @@ fn test_unary_examples() {
         ))
     );
     assert_eq!(eval("-3"), Ok(Value::Int(-3)));
-    assert_eq!(eval("-3.6"), Ok(Value::Float(-3.6)));
+    assert_eq!(eval("-3.6"), Ok(Value::from_float(-3.6)));
     assert_eq!(eval("----3"), Ok(Value::Int(3)));
-    assert_eq!(eval("1e0"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("1e-0"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("10e3"), Ok(Value::Float(10000.0)));
-    assert_eq!(eval("10e+3"), Ok(Value::Float(10000.0)));
-    assert_eq!(eval("10e-3"), Ok(Value::Float(0.01)));
+    assert_eq!(eval("1e0"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("1e-0"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("10e3"), Ok(Value::from_float(10000.0)));
+    assert_eq!(eval("10e+3"), Ok(Value::from_float(10000.0)));
+    assert_eq!(eval("10e-3"), Ok(Value::from_float(0.01)));
 }
 
 #[test]
@@ -33,22 +34,22 @@ fn test_binary_examples() {
     assert_eq!(eval("5-3"), Ok(Value::Int(2)));
     assert_eq!(eval("5 / 4"), Ok(Value::Int(1)));
     assert_eq!(eval("5 *3"), Ok(Value::Int(15)));
-    assert_eq!(eval("1.0+3"), Ok(Value::Float(4.0)));
-    assert_eq!(eval("3.0+1"), Ok(Value::Float(4.0)));
-    assert_eq!(eval("3-5.0"), Ok(Value::Float(-2.0)));
-    assert_eq!(eval("5-3.0"), Ok(Value::Float(2.0)));
-    assert_eq!(eval("5 / 4.0"), Ok(Value::Float(1.25)));
-    assert_eq!(eval("5.0 *3"), Ok(Value::Float(15.0)));
-    assert_eq!(eval("5.0 *-3"), Ok(Value::Float(-15.0)));
-    assert_eq!(eval("5.0 *- 3"), Ok(Value::Float(-15.0)));
-    assert_eq!(eval("5.0 * -3"), Ok(Value::Float(-15.0)));
-    assert_eq!(eval("5.0 * - 3"), Ok(Value::Float(-15.0)));
-    assert_eq!(eval("-5.0 *-3"), Ok(Value::Float(15.0)));
+    assert_eq!(eval("1.0+3"), Ok(Value::from_float(4.0)));
+    assert_eq!(eval("3.0+1"), Ok(Value::from_float(4.0)));
+    assert_eq!(eval("3-5.0"), Ok(Value::from_float(-2.0)));
+    assert_eq!(eval("5-3.0"), Ok(Value::from_float(2.0)));
+    assert_eq!(eval("5 / 4.0"), Ok(Value::from_float(1.25)));
+    assert_eq!(eval("5.0 *3"), Ok(Value::from_float(15.0)));
+    assert_eq!(eval("5.0 *-3"), Ok(Value::from_float(-15.0)));
+    assert_eq!(eval("5.0 *- 3"), Ok(Value::from_float(-15.0)));
+    assert_eq!(eval("5.0 * -3"), Ok(Value::from_float(-15.0)));
+    assert_eq!(eval("5.0 * - 3"), Ok(Value::from_float(-15.0)));
+    assert_eq!(eval("-5.0 *-3"), Ok(Value::from_float(15.0)));
     assert_eq!(eval("3+-1"), Ok(Value::Int(2)));
     assert_eq!(eval("-3-5"), Ok(Value::Int(-8)));
     assert_eq!(eval("-5--3"), Ok(Value::Int(-2)));
-    assert_eq!(eval("5e2--3"), Ok(Value::Float(503.0)));
-    assert_eq!(eval("-5e-2--3"), Ok(Value::Float(2.95)));
+    assert_eq!(eval("5e2--3"), Ok(Value::from_float(503.0)));
+    assert_eq!(eval("-5e-2--3"), Ok(Value::from_float(2.95)));
 }
 
 #[test]
@@ -59,17 +60,17 @@ fn test_arithmetic_precedence_examples() {
     assert_eq!(eval("5-3/3"), Ok(Value::Int(4)));
     assert_eq!(eval("5 / 4*2"), Ok(Value::Int(2)));
     assert_eq!(eval("1-5 *3/15"), Ok(Value::Int(0)));
-    assert_eq!(eval("15/7/2.0"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("15.0/7/2"), Ok(Value::Float(15.0 / 7.0 / 2.0)));
-    assert_eq!(eval("15.0/-7/2"), Ok(Value::Float(15.0 / -7.0 / 2.0)));
-    assert_eq!(eval("-15.0/7/2"), Ok(Value::Float(-15.0 / 7.0 / 2.0)));
-    assert_eq!(eval("-15.0/7/-2"), Ok(Value::Float(-15.0 / 7.0 / -2.0)));
+    assert_eq!(eval("15/7/2.0"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("15.0/7/2"), Ok(Value::from_float(15.0 / 7.0 / 2.0)));
+    assert_eq!(eval("15.0/-7/2"), Ok(Value::from_float(15.0 / -7.0 / 2.0)));
+    assert_eq!(eval("-15.0/7/2"), Ok(Value::from_float(-15.0 / 7.0 / 2.0)));
+    assert_eq!(eval("-15.0/7/-2"), Ok(Value::from_float(-15.0 / 7.0 / -2.0)));
 }
 
 #[test]
 fn test_braced_examples() {
     assert_eq!(eval("(1)"), Ok(Value::Int(1)));
-    assert_eq!(eval("( 1.0 )"), Ok(Value::Float(1.0)));
+    assert_eq!(eval("( 1.0 )"), Ok(Value::from_float(1.0)));
     assert_eq!(eval("( true)"), Ok(Value::Boolean(true)));
     assert_eq!(eval("( -1 )"), Ok(Value::Int(-1)));
     assert_eq!(eval("-(1)"), Ok(Value::Int(-1)));
@@ -88,15 +89,13 @@ fn test_mod_examples() {
 
 #[test]
 fn test_pow_examples() {
-    assert_eq!(eval("1 ^ 4"), Ok(Value::Float(1.0)));
+    assert_eq!(eval("1 ^ 4"), Ok(Value::from_float(1.0)));
     assert_eq!(
         eval("6 ^ 4"),
-        Ok(Value::Float(
-            (6.0 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).powf(4.0)
-        ))
+        Ok(Value::from_float(6.0f64.powf(4.0)))
     );
-    assert_eq!(eval("1 ^ 4 + 2"), Ok(Value::Float(3.0)));
-    assert_eq!(eval("2 ^ (4 + 2)"), Ok(Value::Float(64.0)));
+    assert_eq!(eval("1 ^ 4 + 2"), Ok(Value::from_float(3.0)));
+    assert_eq!(eval("2 ^ (4 + 2)"), Ok(Value::from_float(64.0)));
 }
 
 #[test]
@@ -121,7 +120,7 @@ fn test_with_context() {
         .unwrap();
     context.set_value("five".into(), Value::Int(5)).unwrap();
     context.set_value("six".into(), Value::Int(6)).unwrap();
-    context.set_value("half".into(), Value::Float(0.5)).unwrap();
+    context.set_value("half".into(), Value::from_float(0.5)).unwrap();
     context.set_value("zero".into(), Value::Int(0)).unwrap();
 
     assert_eq!(eval_with_context("tr", &context), Ok(Value::Boolean(true)));
@@ -136,14 +135,14 @@ fn test_with_context() {
     );
     assert_eq!(
         eval_with_context("five * half", &context),
-        Ok(Value::Float(2.5))
+        Ok(Value::from_float(2.5))
     );
     assert_eq!(
         eval_with_context("five < six && true", &context),
         Ok(Value::Boolean(true))
     );
 
-    assert_eq!(context.remove_value("half"), Ok(Some(Value::Float(0.5))));
+    assert_eq!(context.remove_value("half"), Ok(Some(Value::from_float(0.5))));
     assert_eq!(context.remove_value("zero"), Ok(Some(Value::Int(0))));
     assert_eq!(context.remove_value("zero"), Ok(None));
     assert_eq!(
@@ -164,7 +163,7 @@ fn test_functions() {
                 if let Value::Int(int) = argument {
                     Ok(Value::Int(int - 2))
                 } else if let Value::Float(float) = argument {
-                    Ok(Value::Float(float - 2.0))
+                    Ok(Value::from_float(float - 2.0))
                 } else {
                     Err(EvalexprError::expected_number(argument.clone()))
                 }
@@ -195,7 +194,7 @@ fn test_n_ary_functions() {
                 if let Value::Int(int) = argument {
                     Ok(Value::Int(int - 2))
                 } else if let Value::Float(float) = argument {
-                    Ok(Value::Float(float - 2.0))
+                    Ok(Value::from_float(float - 2.0))
                 } else {
                     Err(EvalexprError::expected_number(argument.clone()))
                 }
@@ -307,7 +306,7 @@ fn test_capturing_functions() {
                     Ok(Value::Int(int * three))
                 } else if let Value::Float(float) = argument {
                     Ok(Value::Float(
-                        float * three as <DefaultNumericTypes as EvalexprNumericTypes>::Float,
+                        float * OrderedFloat::from(three as f64),
                     ))
                 } else {
                     Err(EvalexprError::expected_number(argument.clone()))
@@ -335,69 +334,59 @@ fn test_capturing_functions() {
 #[test]
 fn test_builtin_functions() {
     // Log
-    assert_eq!(eval("math::ln(2.718281828459045)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("math::log(9, 9)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("math::log2(2)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("math::log10(10)"), Ok(Value::Float(1.0)));
+    assert_eq!(eval("math::ln(2.718281828459045)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("math::log(9, 9)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("math::log2(2)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("math::log10(10)"), Ok(Value::from_float(1.0)));
     // Powers
     assert_eq!(
         eval("math::exp(2)"),
-        Ok(Value::Float(
-            (2.0 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).exp()
-        ))
+        Ok(Value::from_float(2.0f64.exp()))
     );
     assert_eq!(
         eval("math::exp2(2)"),
-        Ok(Value::Float(
-            (2.0 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).exp2()
-        ))
+        Ok(Value::from_float(2.0f64.exp2()))
     );
     assert_eq!(
         eval("math::pow(1.5, 1.3)"),
-        Ok(Value::Float(
-            (1.5 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).powf(1.3)
-        ))
+        Ok(Value::from_float(1.5f64.powf(1.3)))
     );
     // Cos
-    assert_eq!(eval("math::cos(0)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("math::acos(1)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::cosh(0)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("math::acosh(1)"), Ok(Value::Float(0.0)));
+    assert_eq!(eval("math::cos(0)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("math::acos(1)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::cosh(0)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("math::acosh(1)"), Ok(Value::from_float(0.0)));
     // Sin
-    assert_eq!(eval("math::sin(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::asin(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::sinh(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::asinh(0)"), Ok(Value::Float(0.0)));
+    assert_eq!(eval("math::sin(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::asin(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::sinh(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::asinh(0)"), Ok(Value::from_float(0.0)));
     // Tan
-    assert_eq!(eval("math::tan(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::atan(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::tanh(0)"), Ok(Value::Float(0.0)));
-    assert_eq!(eval("math::atanh(0)"), Ok(Value::Float(0.0)));
+    assert_eq!(eval("math::tan(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::atan(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::tanh(0)"), Ok(Value::from_float(0.0)));
+    assert_eq!(eval("math::atanh(0)"), Ok(Value::from_float(0.0)));
     assert_eq!(
         eval("math::atan2(1.2, -5.5)"),
-        Ok(Value::Float(
-            (1.2 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).atan2(-5.5)
-        ))
+        Ok(Value::from_float(1.2f64.atan2(-5.5)))
     );
     // Root
-    assert_eq!(eval("math::sqrt(25)"), Ok(Value::Float(5.0)));
-    assert_eq!(eval("math::cbrt(8)"), Ok(Value::Float(2.0)));
+    assert_eq!(eval("math::sqrt(25)"), Ok(Value::from_float(5.0)));
+    assert_eq!(eval("math::cbrt(8)"), Ok(Value::from_float(2.0)));
     // Hypotenuse
     assert_eq!(
         eval("math::hypot(8.2, 1.1)"),
-        Ok(Value::Float(
-            (8.2 as <DefaultNumericTypes as EvalexprNumericTypes>::Float).hypot(1.1)
-        ))
+        Ok(Value::from_float(8.2f64.hypot(1.1)))
     );
     // Rounding
-    assert_eq!(eval("floor(1.1)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("floor(1.9)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("round(1.1)"), Ok(Value::Float(1.0)));
-    assert_eq!(eval("round(1.5)"), Ok(Value::Float(2.0)));
-    assert_eq!(eval("round(2.5)"), Ok(Value::Float(3.0)));
-    assert_eq!(eval("round(1.9)"), Ok(Value::Float(2.0)));
-    assert_eq!(eval("ceil(1.1)"), Ok(Value::Float(2.0)));
-    assert_eq!(eval("ceil(1.9)"), Ok(Value::Float(2.0)));
+    assert_eq!(eval("floor(1.1)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("floor(1.9)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("round(1.1)"), Ok(Value::from_float(1.0)));
+    assert_eq!(eval("round(1.5)"), Ok(Value::from_float(2.0)));
+    assert_eq!(eval("round(2.5)"), Ok(Value::from_float(3.0)));
+    assert_eq!(eval("round(1.9)"), Ok(Value::from_float(2.0)));
+    assert_eq!(eval("ceil(1.1)"), Ok(Value::from_float(2.0)));
+    assert_eq!(eval("ceil(1.9)"), Ok(Value::from_float(2.0)));
     assert_eq!(eval("math::is_nan(1.0/0.0)"), Ok(Value::Boolean(false)));
     assert_eq!(eval("math::is_nan(0.0/0.0)"), Ok(Value::Boolean(true)));
     assert_eq!(eval("math::is_finite(1.0/0.0)"), Ok(Value::Boolean(false)));
@@ -411,8 +400,8 @@ fn test_builtin_functions() {
     assert_eq!(eval("math::is_normal(1.0/0.0)"), Ok(Value::Boolean(false)));
     assert_eq!(eval("math::is_normal(0)"), Ok(Value::Boolean(false)));
     // Absolute
-    assert_eq!(eval("math::abs(15.4)"), Ok(Value::Float(15.4)));
-    assert_eq!(eval("math::abs(-15.4)"), Ok(Value::Float(15.4)));
+    assert_eq!(eval("math::abs(15.4)"), Ok(Value::from_float(15.4)));
+    assert_eq!(eval("math::abs(-15.4)"), Ok(Value::from_float(15.4)));
     assert_eq!(eval("math::abs(15)"), Ok(Value::Int(15)));
     assert_eq!(eval("math::abs(-15)"), Ok(Value::Int(15)));
     // Other
@@ -423,7 +412,7 @@ fn test_builtin_functions() {
     assert_eq!(eval("typeof(true)"), Ok(Value::String("boolean".into())));
     assert_eq!(eval("typeof()"), Ok(Value::String("empty".into())));
     assert_eq!(eval("min(4.0, 3)"), Ok(Value::Int(3)));
-    assert_eq!(eval("max(4.0, 3)"), Ok(Value::Float(4.0)));
+    assert_eq!(eval("max(4.0, 3)"), Ok(Value::from_float(4.0)));
     assert_eq!(eval("len(\"foobar\")"), Ok(Value::Int(6)));
     assert_eq!(eval("len(\"a\", \"b\")"), Ok(Value::Int(2)));
     //Contians
@@ -681,7 +670,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_string("3.3"),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -695,7 +684,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_string_with_context("3.3", &context),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -709,7 +698,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_string_with_context_mut("3.3", &mut context),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -717,7 +706,7 @@ fn test_shortcut_functions() {
         Err(EvalexprError::VariableIdentifierNotFound("3..3".to_owned()))
     );
 
-    assert_eq!(eval_float("3.3"), Ok(3.3));
+    assert_eq!(eval_float("3.3"), Ok(OrderedFloat(3.3)));
     assert_eq!(
         eval_float("33"),
         Err(EvalexprError::ExpectedFloat {
@@ -728,7 +717,7 @@ fn test_shortcut_functions() {
         eval_float("asd()"),
         Err(EvalexprError::FunctionIdentifierNotFound("asd".to_owned()))
     );
-    assert_eq!(eval_float_with_context("3.3", &context), Ok(3.3));
+    assert_eq!(eval_float_with_context("3.3", &context), Ok(OrderedFloat(3.3)));
     assert_eq!(
         eval_float_with_context("33", &context),
         Err(EvalexprError::ExpectedFloat {
@@ -739,7 +728,7 @@ fn test_shortcut_functions() {
         eval_float_with_context("asd)", &context),
         Err(EvalexprError::UnmatchedRBrace)
     );
-    assert_eq!(eval_float_with_context_mut("3.3", &mut context), Ok(3.3));
+    assert_eq!(eval_float_with_context_mut("3.3", &mut context), Ok(OrderedFloat(3.3)));
     assert_eq!(
         eval_float_with_context_mut("33", &mut context),
         Err(EvalexprError::ExpectedFloat {
@@ -755,7 +744,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_int("3.3"),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -766,7 +755,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_int_with_context("3.3", &context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -777,7 +766,7 @@ fn test_shortcut_functions() {
     assert_eq!(
         eval_int_with_context_mut("3.3", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -785,7 +774,7 @@ fn test_shortcut_functions() {
         Err(EvalexprError::VariableIdentifierNotFound(".".to_owned()))
     );
 
-    assert_eq!(eval_number("3"), Ok(3.0));
+    assert_eq!(eval_number("3"), Ok(OrderedFloat(3.0)));
     assert_eq!(
         eval_number("true"),
         Err(EvalexprError::ExpectedNumber {
@@ -796,8 +785,8 @@ fn test_shortcut_functions() {
         eval_number("abc"),
         Err(EvalexprError::VariableIdentifierNotFound("abc".to_owned()))
     );
-    assert_eq!(eval_number_with_context("3.5", &context), Ok(3.5));
-    assert_eq!(eval_number_with_context("3", &context), Ok(3.0));
+    assert_eq!(eval_number_with_context("3.5", &context), Ok(OrderedFloat(3.5)));
+    assert_eq!(eval_number_with_context("3", &context), Ok(OrderedFloat(3.0)));
     assert_eq!(
         eval_number_with_context("true", &context),
         Err(EvalexprError::ExpectedNumber {
@@ -808,8 +797,8 @@ fn test_shortcut_functions() {
         eval_number_with_context("abc", &context),
         Err(EvalexprError::VariableIdentifierNotFound("abc".to_owned()))
     );
-    assert_eq!(eval_number_with_context_mut("3.5", &mut context), Ok(3.5));
-    assert_eq!(eval_number_with_context_mut("3", &mut context), Ok(3.0));
+    assert_eq!(eval_number_with_context_mut("3.5", &mut context), Ok(OrderedFloat(3.5)));
+    assert_eq!(eval_number_with_context_mut("3", &mut context), Ok(OrderedFloat(3.0)));
     assert_eq!(
         eval_number_with_context_mut("true", &mut context),
         Err(EvalexprError::ExpectedNumber {
@@ -960,7 +949,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_string(),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -980,7 +969,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_string_with_context(&context),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -1000,7 +989,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_string_with_context_mut(&mut context),
         Err(EvalexprError::ExpectedString {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -1014,7 +1003,7 @@ fn test_shortcut_functions() {
         build_operator_tree::<DefaultNumericTypes>("3.3")
             .unwrap()
             .eval_float(),
-        Ok(3.3)
+        Ok(OrderedFloat(3.3))
     );
     assert_eq!(
         build_operator_tree::<DefaultNumericTypes>("33")
@@ -1034,7 +1023,7 @@ fn test_shortcut_functions() {
         build_operator_tree("3.3")
             .unwrap()
             .eval_float_with_context(&context),
-        Ok(3.3)
+        Ok(OrderedFloat(3.3))
     );
     assert_eq!(
         build_operator_tree("33")
@@ -1054,7 +1043,7 @@ fn test_shortcut_functions() {
         build_operator_tree("3.3")
             .unwrap()
             .eval_float_with_context_mut(&mut context),
-        Ok(3.3)
+        Ok(OrderedFloat(3.3))
     );
     assert_eq!(
         build_operator_tree("33")
@@ -1082,7 +1071,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_int(),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -1102,7 +1091,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_int_with_context(&context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -1122,7 +1111,7 @@ fn test_shortcut_functions() {
             .unwrap()
             .eval_int_with_context_mut(&mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(3.3)
+            actual: Value::from_float(3.3)
         })
     );
     assert_eq!(
@@ -1136,7 +1125,7 @@ fn test_shortcut_functions() {
         build_operator_tree::<DefaultNumericTypes>("3")
             .unwrap()
             .eval_number(),
-        Ok(3.0)
+        Ok(OrderedFloat(3.0))
     );
     assert_eq!(
         build_operator_tree::<DefaultNumericTypes>("true")
@@ -1156,7 +1145,7 @@ fn test_shortcut_functions() {
         build_operator_tree("3")
             .unwrap()
             .eval_number_with_context(&context),
-        Ok(3.0)
+        Ok(OrderedFloat(3.0))
     );
     assert_eq!(
         build_operator_tree("true")
@@ -1176,7 +1165,7 @@ fn test_shortcut_functions() {
         build_operator_tree("3")
             .unwrap()
             .eval_number_with_context_mut(&mut context),
-        Ok(3.0)
+        Ok(OrderedFloat(3.0))
     );
     assert_eq!(
         build_operator_tree("true")
@@ -1431,7 +1420,7 @@ fn test_assignment() {
     );
 
     assert_eq!(eval_int_with_context("int", &context), Ok(3));
-    assert_eq!(eval_float_with_context("float", &context), Ok(2.0));
+    assert_eq!(eval_float_with_context("float", &context), Ok(OrderedFloat(2.0)));
     assert_eq!(
         eval_tuple_with_context("tuple", &context),
         Ok(vec![Value::from_int(1), Value::from_int(1)])
@@ -1560,9 +1549,9 @@ fn test_implicit_context() {
     assert_eq!(eval_int("a = 2 + 4 * 2; b = -5 + 3 * 5; a - b"), Ok(0));
     assert_eq!(
         eval_float("a = 2 + 4 * 2; b = -5 + 3 * 5; a - b + 0.5"),
-        Ok(0.5)
+        Ok(OrderedFloat(0.5))
     );
-    assert_eq!(eval_number("a = 2 + 4 * 2; b = -5 + 3 * 5; a - b"), Ok(0.0));
+    assert_eq!(eval_number("a = 2 + 4 * 2; b = -5 + 3 * 5; a - b"), Ok(OrderedFloat(0.0)));
     assert_eq!(eval_empty("a = 2 + 4 * 2; b = -5 + 3 * 5;"), Ok(()));
     assert_eq!(
         eval_tuple("a = 2 + 4 * 2; b = -5 + 3 * 5; a, b + 0.5"),
@@ -1605,19 +1594,19 @@ fn test_operator_assignments() {
     assert_eq!(eval_int_with_context_mut("a *= 5; a", &mut context), Ok(15));
     assert_eq!(
         eval_float_with_context_mut("b = 5.0; b", &mut context),
-        Ok(5.0)
+        Ok(OrderedFloat(5.0))
     );
     assert_eq!(
         eval_float_with_context_mut("b /= 2; b", &mut context),
-        Ok(2.5)
+        Ok(OrderedFloat(2.5))
     );
     assert_eq!(
         eval_float_with_context_mut("b %= 2; b", &mut context),
-        Ok(0.5)
+        Ok(OrderedFloat(0.5))
     );
     assert_eq!(
         eval_float_with_context_mut("b ^= 2; b", &mut context),
-        Ok(0.25)
+        Ok(OrderedFloat(0.25))
     );
     assert_eq!(
         eval_boolean_with_context_mut("c = true; c", &mut context),
@@ -1701,43 +1690,43 @@ fn test_hashmap_context_type_safety() {
     assert_eq!(
         eval_with_context_mut("a = 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(4.0)
+            actual: Value::from_float(4.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a += 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(8.0)
+            actual: Value::from_float(8.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a -= 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(0.0)
+            actual: Value::from_float(0.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a *= 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(16.0)
+            actual: Value::from_float(16.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a /= 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(1.0)
+            actual: Value::from_float(1.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a %= 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(0.0)
+            actual: Value::from_float(0.0)
         })
     );
     assert_eq!(
         eval_with_context_mut("a ^= 4.0", &mut context),
         Err(EvalexprError::ExpectedInt {
-            actual: Value::Float(256.0)
+            actual: Value::from_float(256.0)
         })
     );
 
@@ -1790,7 +1779,7 @@ fn test_hashmap_context_clone_debug() {
                     Ok(Value::Int(int * three))
                 } else if let Value::Float(float) = argument {
                     Ok(Value::Float(
-                        float * three as <DefaultNumericTypes as EvalexprNumericTypes>::Float,
+                        float * OrderedFloat::from(three as f64),
                     ))
                 } else {
                     Err(EvalexprError::expected_number(argument.clone()))
@@ -1934,9 +1923,9 @@ fn test_long_expression_i89() {
         "x*0.2*5/4+x*2*4*1*1*1*1*1*1*1+7*math::sin(y)-z/math::sin(3.0/2.0/(1-x*4*1*1*1*1))",
     )
     .unwrap();
-    let x = 0.0;
-    let y: <DefaultNumericTypes as EvalexprNumericTypes>::Float = 3.0;
-    let z = 4.0;
+    let x = 0.0f64;
+    let y = 3.0f64;
+    let z = 4.0f64;
     let context = context_map! {
         "x" => float 0.0,
         "y" => float 3.0,
@@ -1947,10 +1936,11 @@ fn test_long_expression_i89() {
         + x * 2.0 * 4.0 * 1.0 * 1.0 * 1.0 * 1.0 * 1.0 * 1.0 * 1.0
         + 7.0 * y.sin()
         - z / (3.0 / 2.0 / (1.0 - x * 4.0 * 1.0 * 1.0 * 1.0 * 1.0)).sin();
+    let expected = OrderedFloat(expected);
     let actual: <DefaultNumericTypes as EvalexprNumericTypes>::Float =
         tree.eval_float_with_context(&context).unwrap();
     assert!(
-        (expected - actual).abs() < expected.abs().min(actual.abs()) * 1e-12,
+        (expected.0 - actual.0).abs() < expected.0.abs().min(actual.0.abs()) * 1e-12,
         "expected: {}, actual: {}",
         expected,
         actual
@@ -1964,7 +1954,7 @@ fn test_value_type() {
         ValueType::String
     );
     assert_eq!(
-        ValueType::from(&Value::<DefaultNumericTypes>::Float(0.0)),
+        ValueType::from(&Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0))),
         ValueType::Float
     );
     assert_eq!(
@@ -1989,7 +1979,7 @@ fn test_value_type() {
         ValueType::String
     );
     assert_eq!(
-        ValueType::from(&mut Value::<DefaultNumericTypes>::Float(0.0)),
+        ValueType::from(&mut Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0))),
         ValueType::Float
     );
     assert_eq!(
@@ -2010,14 +2000,14 @@ fn test_value_type() {
     );
 
     assert!(!Value::<DefaultNumericTypes>::String(String::new()).is_number());
-    assert!(Value::<DefaultNumericTypes>::Float(0.0).is_number());
+    assert!(Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).is_number());
     assert!(Value::<DefaultNumericTypes>::Int(0).is_number());
     assert!(!Value::<DefaultNumericTypes>::Boolean(true).is_number());
     assert!(!Value::<DefaultNumericTypes>::Tuple(Vec::new()).is_number());
     assert!(!Value::<DefaultNumericTypes>::Empty.is_number());
 
     assert!(!Value::<DefaultNumericTypes>::String(String::new()).is_empty());
-    assert!(!Value::<DefaultNumericTypes>::Float(0.0).is_empty());
+    assert!(!Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).is_empty());
     assert!(!Value::<DefaultNumericTypes>::Int(0).is_empty());
     assert!(!Value::<DefaultNumericTypes>::Boolean(true).is_empty());
     assert!(!Value::<DefaultNumericTypes>::Tuple(Vec::new()).is_empty());
@@ -2029,7 +2019,7 @@ fn test_value_type() {
             actual: Value::String(String::new())
         })
     );
-    assert_eq!(Value::<DefaultNumericTypes>::Float(0.0).as_float(), Ok(0.0));
+    assert_eq!(Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).as_float(), Ok(OrderedFloat(0.0)));
     assert_eq!(
         Value::<DefaultNumericTypes>::Int(0).as_float(),
         Err(EvalexprError::ExpectedFloat {
@@ -2062,9 +2052,9 @@ fn test_value_type() {
         })
     );
     assert_eq!(
-        Value::<DefaultNumericTypes>::Float(0.0).as_tuple(),
+        Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).as_tuple(),
         Err(EvalexprError::ExpectedTuple {
-            actual: Value::Float(0.0)
+            actual: Value::from_float(0.0)
         })
     );
     assert_eq!(
@@ -2097,9 +2087,9 @@ fn test_value_type() {
         })
     );
     assert_eq!(
-        Value::<DefaultNumericTypes>::Float(0.0).as_fixed_len_tuple(0),
+        Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).as_fixed_len_tuple(0),
         Err(EvalexprError::ExpectedTuple {
-            actual: Value::Float(0.0)
+            actual: Value::from_float(0.0)
         })
     );
     assert_eq!(
@@ -2132,9 +2122,9 @@ fn test_value_type() {
         })
     );
     assert_eq!(
-        Value::<DefaultNumericTypes>::Float(0.0).as_empty(),
+        Value::<DefaultNumericTypes>::Float(OrderedFloat(0.0)).as_empty(),
         Err(EvalexprError::ExpectedEmpty {
-            actual: Value::Float(0.0)
+            actual: Value::from_float(0.0)
         })
     );
     assert_eq!(
@@ -2215,7 +2205,7 @@ fn test_try_from() {
         })
     );
 
-    let value = Value::<DefaultNumericTypes>::Float(1.3);
+    let value = Value::<DefaultNumericTypes>::Float(OrderedFloat(1.3));
     assert_eq!(
         String::try_from(value.clone()),
         Err(EvalexprError::ExpectedString {
@@ -2386,12 +2376,12 @@ fn test_negative_power() {
         "{:?}",
         build_operator_tree::<DefaultNumericTypes>("3^-2").unwrap()
     );
-    assert_eq!(eval("3^-2"), Ok(Value::Float(1.0 / 9.0)));
-    assert_eq!(eval("3^(-2)"), Ok(Value::Float(1.0 / 9.0)));
-    assert_eq!(eval("-3^2"), Ok(Value::Float(-9.0)));
-    assert_eq!(eval("-(3)^2"), Ok(Value::Float(-9.0)));
-    assert_eq!(eval("(-3)^-2"), Ok(Value::Float(1.0 / 9.0)));
-    assert_eq!(eval("-(3^-2)"), Ok(Value::Float(-1.0 / 9.0)));
+    assert_eq!(eval("3^-2"), Ok(Value::from_float(1.0 / 9.0)));
+    assert_eq!(eval("3^(-2)"), Ok(Value::from_float(1.0 / 9.0)));
+    assert_eq!(eval("-3^2"), Ok(Value::from_float(-9.0)));
+    assert_eq!(eval("-(3)^2"), Ok(Value::from_float(-9.0)));
+    assert_eq!(eval("(-3)^-2"), Ok(Value::from_float(1.0 / 9.0)));
+    assert_eq!(eval("-(3^-2)"), Ok(Value::from_float(-1.0 / 9.0)));
 }
 
 #[test]
